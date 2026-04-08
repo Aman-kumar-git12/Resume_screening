@@ -599,6 +599,12 @@
           return;
         }
 
+        if (!text || text.trim() === "") {
+          console.error("Empty response received from n8n.");
+          renderError("Server returned an empty response. Ensure the 'Respond to Webhook' node in n8n has a Body defined.");
+          return;
+        }
+
         let data;
         try {
           data = JSON.parse(text);
