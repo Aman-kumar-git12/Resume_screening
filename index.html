@@ -486,20 +486,37 @@
     }
 
     function extractDecisionPayload(data) {
-      data = Array.isArray(data) ? data[0] : data;
+      // 1. Handle array response
+      if (Array.isArray(data)) data = data[0];
+      
+      let target = data;
+      
+      // 2. Handle stringified JSON in 'output' field (Common in n8n AI Agent)
+      if (typeof data?.output === "string") {
+        try {
+          target = JSON.parse(data.output);
+        } catch (e) {
+          target = data;
+        }
+      } else if (data?.output && typeof data.output === "object") {
+        target = data.output;
+      }
 
-      const decisionData = data?.decision && typeof data.decision === "object"
-        ? data.decision
-        : data || {};
+      // 3. Fallback to decision nested in an object
+      const finalData = target?.decision && typeof target.decision === "object" 
+        ? target.decision 
+        : target || {};
 
       return {
-        decision: String(decisionData.decision ?? data?.decision ?? "").toUpperCase() || "REJECTED",
-        score: Number(decisionData.score ?? data?.score ?? 0),
-        skills: Array.isArray(decisionData.missing_skills)
-          ? decisionData.missing_skills
-          : Array.isArray(data?.missing_skills)
-            ? data.missing_skills
-            : []
+        decision: String(finalData.decision ?? target?.decision ?? data?.decision ?? "").toUpperCase() || "REJECTED",
+        score: Number(finalData.score ?? target?.score ?? data?.score ?? 0),
+        skills: Array.isArray(finalData.missing_skills)
+          ? finalData.missing_skills
+          : Array.isArray(target?.missing_skills)
+            ? target.missing_skills
+            : Array.isArray(data?.missing_skills)
+              ? data.missing_skills
+              : []
       };
     }
 
