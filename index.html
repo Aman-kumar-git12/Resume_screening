@@ -594,15 +594,17 @@
         console.log("Raw response:", text);
 
         if (!response.ok) {
-          renderError(`Request failed (${response.status}). Start the workflow in n8n or use the production webhook.`);
+          console.error("HTTP Error:", response.status, text);
+          renderError(`Request failed (${response.status}). Check n8n Executions or ensure the workflow is Published.`);
           return;
         }
 
         let data;
         try {
           data = JSON.parse(text);
-        } catch {
-          renderError("Server returned an invalid JSON response.");
+        } catch (e) {
+          console.error("JSON Parse Error:", e, text);
+          renderError("Server returned an invalid JSON response. Peek at the console for details.");
           return;
         }
 
